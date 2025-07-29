@@ -1,0 +1,529 @@
+--------------
+CREATE DATABASE IF NOT EXISTS NYCMenu
+--------------
+
+Query OK, 1 row affected, 1 warning (0.00 sec)
+
+--------------
+DROP TABLE IF EXISTS `MenuDirty`
+--------------
+
+Query OK, 0 rows affected, 1 warning (0.01 sec)
+
+--------------
+DROP TABLE IF EXISTS `MenuClean`
+--------------
+
+Query OK, 0 rows affected (0.04 sec)
+
+--------------
+DROP TABLE IF EXISTS `MenuPageDirty`
+--------------
+
+Query OK, 0 rows affected, 1 warning (0.00 sec)
+
+--------------
+DROP TABLE IF EXISTS `MenuPageClean`
+--------------
+
+Query OK, 0 rows affected (0.02 sec)
+
+--------------
+DROP TABLE IF EXISTS `MenuItemDirty`
+--------------
+
+Query OK, 0 rows affected, 1 warning (0.00 sec)
+
+--------------
+DROP TABLE IF EXISTS `MenuItemClean`
+--------------
+
+Query OK, 0 rows affected (0.02 sec)
+
+--------------
+DROP TABLE IF EXISTS `DishDirty`
+--------------
+
+Query OK, 0 rows affected, 1 warning (0.00 sec)
+
+--------------
+DROP TABLE IF EXISTS `DishClean`
+--------------
+
+Query OK, 0 rows affected (0.23 sec)
+
+--------------
+CREATE TABLE MenuClean ( 
+	id INT PRIMARY KEY, 
+	sponsor VARCHAR(255), 
+	event VARCHAR(255), 
+	venue VARCHAR(255), 
+	place VARCHAR(255), 
+	physical_description VARCHAR(255), 
+	occasion VARCHAR(255), 
+	notes VARCHAR(255), 
+	call_number VARCHAR(255), 
+	`date` VARCHAR(255), 
+	location VARCHAR(255), 
+	currency VARCHAR(255), 
+	currency_symbol VARCHAR(255), 
+	status VARCHAR(255), 
+	page_count INT, 
+	dish_count INT
+)
+--------------
+
+Query OK, 0 rows affected (0.03 sec)
+
+--------------
+CREATE TABLE MenuPageClean ( 
+	id INT PRIMARY KEY, 
+	menu_id INT, 
+	page_number INT, 
+	image_id VARCHAR(255), 
+	full_height INT, 
+	full_width INT, 
+	placeholder INT
+)
+--------------
+
+Query OK, 0 rows affected (0.02 sec)
+
+--------------
+CREATE TABLE MenuItemClean ( 
+	id INT PRIMARY KEY, 
+	menu_page_id INT, 
+	price DECIMAL(10,4), 
+	dish_id INT, 
+	created_at DATETIME, 
+	updated_at DATETIME, 
+	xpos VARCHAR(12), 
+	ypos VARCHAR(12)
+)
+--------------
+
+Query OK, 0 rows affected (0.02 sec)
+
+--------------
+CREATE TABLE DishClean ( 
+	id INT PRIMARY KEY, 
+	name VARCHAR(2048), 
+	menus_appeared INT, 
+	times_appeared INT, 
+	first_appeared INT, 
+	last_appeared INT, 
+	lowest_price DECIMAL(10,4), 
+	highest_price DECIMAL(10,4), 
+	placeholder INT
+)
+--------------
+
+Query OK, 0 rows affected (0.03 sec)
+
+--------------
+LOAD DATA INFILE "C:/Users/Annjamin/Documents/Benj's Stuff/UIUC MCS/CS513-TheoryAndPracticeOfDataCleaning/Project/Data Cleaning/OpenRefine-CleaningPhase1/Menu_clean-Phase1-OpenRefine_PartiallyCleaned.csv"
+INTO TABLE MenuClean
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS
+--------------
+
+Query OK, 15341 rows affected (0.26 sec)
+Records: 15341  Deleted: 0  Skipped: 0  Warnings: 0
+
+--------------
+LOAD DATA INFILE "C:/Users/Annjamin/Documents/Benj's Stuff/UIUC MCS/CS513-TheoryAndPracticeOfDataCleaning/Project/Data Cleaning/OpenRefine-CleaningPhase1/MenuPage_clean-Phase1-OpenRefine_PartiallyCleaned.csv"
+INTO TABLE MenuPageClean
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS
+(id, menu_id, @vpage_number, image_id, @vfull_height, @vfull_width, placeholder)
+SET
+page_number = NULLIF(@vpage_number, ''),
+full_height = NULLIF(@vfull_height, ''),
+full_width = NULLIF(@vfull_width, '')
+--------------
+
+Query OK, 65636 rows affected (0.65 sec)
+Records: 65636  Deleted: 0  Skipped: 0  Warnings: 0
+
+--------------
+ALTER TABLE MenuPageClean DROP COLUMN placeholder
+--------------
+
+Query OK, 0 rows affected (0.02 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+--------------
+LOAD DATA INFILE "C:/Users/Annjamin/Documents/Benj's Stuff/UIUC MCS/CS513-TheoryAndPracticeOfDataCleaning/Project/Data Cleaning/OpenRefine-CleaningPhase1/MenuItem_clean-Phase1-OpenRefine_PartiallyCleaned.csv"
+INTO TABLE MenuItemClean
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS
+--------------
+
+Query OK, 886440 rows affected (8.99 sec)
+Records: 886440  Deleted: 0  Skipped: 0  Warnings: 0
+
+--------------
+LOAD DATA INFILE "C:/Users/Annjamin/Documents/Benj's Stuff/UIUC MCS/CS513-TheoryAndPracticeOfDataCleaning/Project/Data Cleaning/OpenRefine-CleaningPhase1/Dish_clean-Phase1-OpenRefine_PartiallyCleaned.csv"
+INTO TABLE DishClean
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+IGNORE 1 ROWS
+(id, name, menus_appeared, times_appeared, first_appeared, last_appeared, @vlowest_price, @vhighest_price, placeholder)
+SET
+lowest_price = NULLIF(@vlowest_price, ''),
+highest_price = NULLIF(@vhighest_price, '')
+--------------
+
+Query OK, 423397 rows affected (4.69 sec)
+Records: 423397  Deleted: 0  Skipped: 0  Warnings: 0
+
+--------------
+ALTER TABLE DishClean DROP COLUMN placeholder
+--------------
+
+Query OK, 0 rows affected (0.04 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+--------------
+SELECT COUNT(*) FROM MenuPageClean WHERE menu_id NOT IN (SELECT id FROM MenuClean)
+--------------
+
++----------+
+| COUNT(*) |
++----------+
+|    12887 |
++----------+
+1 row in set (0.10 sec)
+
+--------------
+DELETE FROM MenuPageClean WHERE id IN (SELECT id FROM (SELECT id FROM MenuPageClean WHERE menu_id NOT IN (SELECT id FROM MenuClean)) AS derived)
+--------------
+
+Query OK, 12887 rows affected (0.32 sec)
+
+--------------
+SELECT COUNT(*) FROM MenuPageClean WHERE menu_id NOT IN (SELECT id FROM MenuClean)
+--------------
+
++----------+
+| COUNT(*) |
++----------+
+|        0 |
++----------+
+1 row in set (0.03 sec)
+
+--------------
+SELECT COUNT(*) FROM MenuItemClean WHERE menu_page_id NOT IN (SELECT id FROM MenuPageClean)
+--------------
+
++----------+
+| COUNT(*) |
++----------+
+|   140649 |
++----------+
+1 row in set (0.47 sec)
+
+--------------
+DELETE FROM MenuItemClean WHERE id IN (SELECT id FROM (SELECT id FROM MenuItemClean WHERE menu_page_id NOT IN (SELECT id FROM MenuPageClean)) AS derived)
+--------------
+
+Query OK, 140649 rows affected (3.81 sec)
+
+--------------
+SELECT COUNT(*) FROM MenuItemClean WHERE menu_page_id NOT IN (SELECT id FROM MenuPageClean)
+--------------
+
++----------+
+| COUNT(*) |
++----------+
+|        0 |
++----------+
+1 row in set (0.53 sec)
+
+--------------
+SELECT COUNT(*) FROM MenuItemClean WHERE dish_id NOT IN (SELECT id FROM DishClean)
+--------------
+
++----------+
+| COUNT(*) |
++----------+
+|        2 |
++----------+
+1 row in set (1.27 sec)
+
+--------------
+DELETE FROM MenuItemClean WHERE id IN (SELECT id FROM (SELECT id FROM MenuItemClean WHERE dish_id NOT IN (SELECT id FROM DishClean)) AS derived)
+--------------
+
+Query OK, 2 rows affected (3.10 sec)
+
+--------------
+SELECT COUNT(*) FROM MenuItemClean WHERE dish_id NOT IN (SELECT id FROM DishClean)
+--------------
+
++----------+
+| COUNT(*) |
++----------+
+|        0 |
++----------+
+1 row in set (1.00 sec)
+
+--------------
+SELECT COUNT(*) FROM 
+(
+	SELECT dishclean.id, dishclean.name, dishclean.lowest_price, MIN(mi.price) FROM dishclean AS dishclean 
+	JOIN menuitemclean AS mi ON dishclean.id = mi.dish_id 
+	GROUP BY dishclean.id 
+	HAVING dishclean.lowest_price <> MIN(mi.price)
+) AS Inaccurate_Lowest_Price
+--------------
+
++----------+
+| COUNT(*) |
++----------+
+|    87540 |
++----------+
+1 row in set (6.80 sec)
+
+--------------
+UPDATE DishClean
+JOIN (
+	SELECT dishclean.id AS id, dishclean.lowest_price, MIN(mi.price) AS true_lowest_price FROM dishclean AS dishclean 
+	JOIN menuitemclean AS mi ON dishclean.id = mi.dish_id 
+	GROUP BY dishclean.id 
+	HAVING dishclean.lowest_price <> MIN(mi.price)
+) AS Inaccurate_Lowest_Price ON DishClean.id = Inaccurate_Lowest_Price.id
+SET 
+DishClean.lowest_price = Inaccurate_Lowest_Price.true_lowest_price
+--------------
+
+Query OK, 87540 rows affected (5.86 sec)
+Rows matched: 87540  Changed: 87540  Warnings: 0
+
+--------------
+SELECT COUNT(*) FROM 
+(
+	SELECT dishclean.id, dishclean.name, dishclean.lowest_price, MIN(menuitemclean.price) FROM dishclean AS dishclean 
+	JOIN menuitemclean ON dishclean.id = menuitemclean.dish_id 
+	GROUP BY dishclean.id 
+	HAVING dishclean.lowest_price <> MIN(menuitemclean.price)
+) AS Inaccurate_Lowest_Price
+--------------
+
++----------+
+| COUNT(*) |
++----------+
+|        0 |
++----------+
+1 row in set (6.94 sec)
+
+--------------
+SELECT COUNT(*) FROM 
+(
+	SELECT dishclean.id, dishclean.name, dishclean.highest_price, MAX(menuitemclean.price) FROM dishclean AS dishclean 
+	JOIN menuitemclean ON dishclean.id = menuitemclean.dish_id 
+	GROUP BY dishclean.id 
+	HAVING dishclean.highest_price <> MAX(menuitemclean.price)
+) AS Inaccurate_Highest_Price
+--------------
+
++----------+
+| COUNT(*) |
++----------+
+|   105141 |
++----------+
+1 row in set (7.04 sec)
+
+--------------
+UPDATE DishClean
+JOIN (
+	SELECT dishclean.id AS id, dishclean.highest_price, MAX(menuitemclean.price) AS true_highest_price FROM dishclean AS dishclean 
+	JOIN menuitemclean ON dishclean.id = menuitemclean.dish_id 
+	GROUP BY dishclean.id 
+	HAVING dishclean.highest_price <> MAX(menuitemclean.price)
+) AS Inaccurate_Highest_Price ON DishClean.id = Inaccurate_Highest_Price.id
+SET 
+DishClean.highest_price = Inaccurate_Highest_Price.true_highest_price
+--------------
+
+Query OK, 105141 rows affected (6.62 sec)
+Rows matched: 105141  Changed: 105141  Warnings: 0
+
+--------------
+SELECT COUNT(*) FROM 
+(
+	SELECT dishclean.id, dishclean.name, dishclean.highest_price, MAX(menuitemclean.price) FROM dishclean AS dishclean 
+	JOIN menuitemclean ON dishclean.id = menuitemclean.dish_id 
+	GROUP BY dishclean.id 
+	HAVING dishclean.highest_price <> MAX(menuitemclean.price)
+) AS Inaccurate_Highest_Price
+--------------
+
++----------+
+| COUNT(*) |
++----------+
+|        0 |
++----------+
+1 row in set (6.77 sec)
+
+--------------
+SELECT COUNT(*) FROM 
+(
+	SELECT dishclean.id, dishclean.name, dishclean.menus_appeared, COUNT(DISTINCT menupageclean.menu_id) FROM dishclean AS dishclean 
+	JOIN menuitemclean ON dishclean.id = menuitemclean.dish_id 
+	JOIN menupageclean ON menuitemclean.menu_page_id = menupageclean.id
+	GROUP BY dishclean.id 
+	HAVING dishclean.menus_appeared <> COUNT(DISTINCT menupageclean.menu_id)
+) AS Inaccurate_Menus_Appeared
+--------------
+
++----------+
+| COUNT(*) |
++----------+
+|    37079 |
++----------+
+1 row in set (4.72 sec)
+
+--------------
+UPDATE DishClean
+JOIN (
+	SELECT dishclean.id AS id, dishclean.menus_appeared, COUNT(DISTINCT menupageclean.menu_id) AS true_menus_appeared FROM dishclean AS dishclean 
+	JOIN menuitemclean ON dishclean.id = menuitemclean.dish_id 
+	JOIN menupageclean ON menuitemclean.menu_page_id = menupageclean.id
+	GROUP BY dishclean.id 
+	HAVING dishclean.menus_appeared <> COUNT(DISTINCT menupageclean.menu_id)
+) AS Inaccurate_Menus_Appeared ON DishClean.id = Inaccurate_Menus_Appeared.id
+SET 
+DishClean.menus_appeared = Inaccurate_Menus_Appeared.true_menus_appeared
+--------------
+
+Query OK, 37079 rows affected (5.58 sec)
+Rows matched: 37079  Changed: 37079  Warnings: 0
+
+--------------
+SELECT COUNT(*) FROM 
+(
+	SELECT dishclean.id, dishclean.name, dishclean.menus_appeared, COUNT(DISTINCT menupageclean.menu_id) FROM dishclean AS dishclean 
+	JOIN menuitemclean ON dishclean.id = menuitemclean.dish_id 
+	JOIN menupageclean ON menuitemclean.menu_page_id = menupageclean.id
+	GROUP BY dishclean.id 
+	HAVING dishclean.menus_appeared <> COUNT(DISTINCT menupageclean.menu_id)
+) AS Inaccurate_Menus_Appeared
+--------------
+
++----------+
+| COUNT(*) |
++----------+
+|        0 |
++----------+
+1 row in set (4.14 sec)
+
+--------------
+SELECT COUNT(*) FROM 
+(
+	SELECT dishclean.id, dishclean.name, dishclean.times_appeared, COUNT(menuitemclean.id) FROM dishclean AS dishclean 
+	JOIN menuitemclean ON dishclean.id = menuitemclean.dish_id 
+	GROUP BY dishclean.id 
+	HAVING dishclean.times_appeared <> COUNT(menuitemclean.id)
+) AS Inaccurate_Times_Appeared
+--------------
+
++----------+
+| COUNT(*) |
++----------+
+|    35022 |
++----------+
+1 row in set (6.40 sec)
+
+--------------
+UPDATE DishClean
+JOIN (
+	SELECT dishclean.id AS id, dishclean.times_appeared, COUNT(menuitemclean.id) as true_times_appeared FROM dishclean AS dishclean 
+	JOIN menuitemclean ON dishclean.id = menuitemclean.dish_id 
+	GROUP BY dishclean.id 
+	HAVING dishclean.times_appeared <> COUNT(menuitemclean.id)
+) AS Inaccurate_Times_Appeared ON DishClean.id = Inaccurate_Times_Appeared.id
+SET 
+DishClean.times_appeared = Inaccurate_Times_Appeared.true_times_appeared
+--------------
+
+Query OK, 35022 rows affected (4.73 sec)
+Rows matched: 35022  Changed: 35022  Warnings: 0
+
+--------------
+SELECT COUNT(*) FROM 
+(
+	SELECT dishclean.id, dishclean.name, dishclean.times_appeared, COUNT(menuitemclean.id) FROM dishclean AS dishclean 
+	JOIN menuitemclean ON dishclean.id = menuitemclean.dish_id 
+	GROUP BY dishclean.id 
+	HAVING dishclean.times_appeared <> COUNT(menuitemclean.id)
+) AS Inaccurate_Times_Appeared
+--------------
+
++----------+
+| COUNT(*) |
++----------+
+|        0 |
++----------+
+1 row in set (6.44 sec)
+
+--------------
+SELECT 'id','sponsor','event','venue','place','physical_description','occasion','notes','call_number','date','location','currency','currency_symbol','status','page_count','dish_count'
+UNION ALL
+SELECT *
+FROM MenuClean
+INTO OUTFILE "C:/Users/Annjamin/Documents/Benj's Stuff/UIUC MCS/CS513-TheoryAndPracticeOfDataCleaning/Project/Data Cleaning/SQL-CleaningPhase2/Output/Menu_Clean-Phase2-SQL_FullyCleaned.csv"
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+--------------
+
+Query OK, 15342 rows affected (0.13 sec)
+
+--------------
+SELECT 'id','menu_id','page_number','image_id','full_height','full_width'
+UNION ALL
+SELECT *
+FROM MenuPageClean
+INTO OUTFILE "C:/Users/Annjamin/Documents/Benj's Stuff/UIUC MCS/CS513-TheoryAndPracticeOfDataCleaning/Project/Data Cleaning/SQL-CleaningPhase2/Output/MenuPage_Clean-Phase2-SQL_FullyCleaned.csv"
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+--------------
+
+Query OK, 52750 rows affected (0.14 sec)
+
+--------------
+SELECT 'id','menu_page_id','price','dish_id','created_at','updated_at','xpos','ypos'
+UNION ALL
+SELECT *
+FROM MenuItemClean
+INTO OUTFILE "C:/Users/Annjamin/Documents/Benj's Stuff/UIUC MCS/CS513-TheoryAndPracticeOfDataCleaning/Project/Data Cleaning/SQL-CleaningPhase2/Output/MenuItem_Clean-Phase2-SQL_FullyCleaned.csv"
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+--------------
+
+Query OK, 745790 rows affected (3.52 sec)
+
+--------------
+SELECT 'id','name','menus_appeared','times_appeared','first_appeared','last_appeared','lowest_price','highest_price'
+UNION ALL
+SELECT *
+FROM DishClean
+INTO OUTFILE "C:/Users/Annjamin/Documents/Benj's Stuff/UIUC MCS/CS513-TheoryAndPracticeOfDataCleaning/Project/Data Cleaning/SQL-CleaningPhase2/Output/Dish_Clean-Phase2-SQL_FullyCleaned.csv"
+FIELDS TERMINATED BY ','
+ENCLOSED BY '"'
+LINES TERMINATED BY '\n'
+--------------
+
+Query OK, 423398 rows affected (2.23 sec)
+
+Bye

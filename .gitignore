@@ -1,0 +1,6 @@
+*.tar.gz
+Dataset/MenuItem.csv
+*.lp_wFullDataEntry-Dirty
+Data Verification/Datalog-Clingo/MenuItem_IN-PROGRESS_original_with_empty_strings.lp
+Data Verification/Datalog-Clingo/MenuItem_Kesavar.lp
+Data Verification/Datalog-Clingo/MenuItem_IN-PROGRESS.lp

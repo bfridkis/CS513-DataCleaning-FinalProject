@@ -1,0 +1,1 @@
+mysql -v -v -v -u root -p NYCMenu < "C:\Users\Annjamin\Documents\Benj's Stuff\UIUC MCS\CS513-TheoryAndPracticeOfDataCleaning\Project\Data Cleaning\SQL-CleaningPhase2\NYCMenuDataCleaningAndVerification.sql" 2>&1 > "C:\Users\Annjamin\Documents\Benj's Stuff\UIUC MCS\CS513-TheoryAndPracticeOfDataCleaning\Project\Data Cleaning\SQL-CleaningPhase2\MySQL-Phase2Cleaning.log"
